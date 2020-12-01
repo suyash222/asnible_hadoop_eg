@@ -1,0 +1,75 @@
+- hosts: all
+  vars_files: 'hadoop_eg_vars.yml' # if you have var file in another folder give full path or relative path of the file
+  tasks:
+    - name: 'copying hadoop'
+      copy:
+        src: '/root/ansible_workspace/hadoop-1.2.1-1.x86_64.rpm'
+        dest: '/root/'
+    
+    - name: 'copying jdk'
+      copy:
+        src: '/root/ansible_workspace/jdk-8u171-linux-x64.rpm'
+        dest: '/root/'
+
+    - name: 'installing hadoop'
+      command:
+        cmd: 'rpm -q hadoop'
+        warn: no
+
+    - name: 'installing jdk'
+      yum: # module used to maintain packages in redhat
+        name: '/root/jdk-8u171-linux-x64.rpm' # if we give the name of local file it will installed that rather than searching on repo
+        state: present
+        disable_gpg_check: yes # disabling gpg check because we don't have gpg key right now
+
+
+    - name: 'copying hdfs and core on master'
+
+      vars: 
+        - node: 'name'
+        - master_ip: '0.0.0.0'
+
+      block: # used to block multiple statement together
+        - template: # this module help us to replace placeholder with actually value
+            src: '/root/ansible_workspace/hdfs-site.xml'
+            dest: '/etc/hadoop/'
+        - template:
+            src: '/root/ansible_workspace/core-site.xml'
+            dest: '/etc/hadoop/'
+
+      when: ansible_facts["default_ipv4"]["address"] == ip_for_checking # conditions that only run when target node is master node other wise not
+
+    - name: 'copying hdfs and core on slave'
+
+      block:
+        - template:
+            src: '/root/ansible_workspace/hdfs-site.xml'
+            dest: '/etc/hadoop/'
+        - template:
+            src: '/root/ansible_workspace/core-site.xml'
+            dest: '/etc/hadoop/'
+
+      when: ansible_facts['default_ipv4']['address'] != master_ip
+
+    - name: 'formating master'
+      command:
+        cmd: 'hadoop namenode -format'
+        warn: no
+      when: ansible_facts['default_ipv4']['address'] == master_ip
+    
+    - name: 'starting namenode'
+      command:
+        cmd: 'hadoop-daemon.sh start namenode'
+        warn: no
+      when: ansible_facts['default_ipv4']['address'] == master_ip
+
+    - name: 'starting datanode'
+      command:
+        cmd: 'hadoop-daemon.sh start datanode'
+        warn: no
+      when: ansible_facts['default_ipv4']['address'] != master_ip
+
+
+
+
+
