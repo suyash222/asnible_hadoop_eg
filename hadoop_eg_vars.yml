@@ -1,0 +1,4 @@
+master_ip: '192.168.43.118' # i am going and make this node as master
+ip_for_checking: '192.168.43.118' # we need this also due to some ansible draw back
+master_port: '9001' # you can use any port number you like
+node: 'data' # same as slave
