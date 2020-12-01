@@ -13,7 +13,7 @@
 
     - name: 'installing hadoop'
       command:
-        cmd: 'rpm -q hadoop'
+        cmd: 'rpm -i /root/hadoop-1.2.1-1.x86_64.rpm --force'
         warn: no
 
     - name: 'installing jdk'
